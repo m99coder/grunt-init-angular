@@ -1,0 +1,58 @@
+{
+  "name": "{%= name %}",
+  "description": "{%= description %}",
+  "private": true,
+  "version": "{%= version %}",
+  "homepage": "{%= homepage %}",
+  "author": {
+    "name": "{%= author_name %}",
+    "email": "{%= author_email %}"
+  },
+  "repository": {
+    "type": "git",
+    "url": "{%= repository %}"
+  },
+  "bugs": {
+    "url": "{%= bugs %}"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "{%= homepage %}/blob/master/LICENSE-{%= licenses %}"
+    }
+  ],
+  "engines": {
+    "node": "~0.10.0"
+  },
+  "main": "lib/server",
+  "bin": "bin/{%= name %}",
+  "scripts": {
+    "start": "node lib/server",
+    "test": "grunt"
+  },
+  "dependencies": {
+    "express": "~3.0.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.0",
+    "grunt-contrib-clean": "~0.4.0",
+    "grunt-contrib-copy": "~0.4.0",
+    "grunt-contrib-connect": "~0.1.0",
+    "grunt-contrib-cssmin": "~0.4.0",
+    "grunt-contrib-htmlmin": "~0.1.0",
+    "grunt-contrib-imagemin": "~0.1.0",
+    "grunt-contrib-jasmine": "~0.3.0",
+    "grunt-contrib-jshint": "~0.2.0",
+    "grunt-contrib-less": "~0.5.0",
+    "grunt-contrib-livereload": "~0.1.0",
+    "grunt-contrib-requirejs": "~0.4.0",
+    "grunt-contrib-uglify": "~0.1.0",
+    "grunt-contrib-watch": "~0.3.0",
+    "grunt-open": "~0.2.0",
+    "grunt-regarde": "~0.1.0",
+    "i": "~0.3.1",
+    "matchdep": "~0.1.0",
+    "underscore": "~1.4.4"
+  },
+  "keywords": []
+}
