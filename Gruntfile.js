@@ -82,9 +82,6 @@ module.exports = function(grunt) {
       },
       app: {
         src: ['lib/client/{,*/}*.js', 'lib/server/{,*/}*.js']
-      },
-      test: {
-        src: 'test/specs/{,*/}*.js'
       }
     },
     less: {
@@ -160,12 +157,17 @@ module.exports = function(grunt) {
         ]
       }
     },
-    jasmine: {
-      all: {
-        options: {
-          outfile: 'test/_index.html',
-          template: 'test/index.html'
-        }
+    karma: {
+      options: {
+        configFile: '.grunt/karma/conf.js'
+      },
+      // continuous integration mode for the build: run tests once in PhantomJS browser.
+      continuous: {
+        singleRun: true
+      },
+      // start karma server (the watch task will run the tests when files change)
+      unit: {
+        background: true
       }
     },
     cssmin: {
@@ -196,7 +198,7 @@ module.exports = function(grunt) {
       }
     },
     imagemin: {
-      dist: {
+      www: {
         files: [{
           expand: true,
           src: 'www/{,*/}*.{png,jpg,jpeg}',
@@ -205,42 +207,33 @@ module.exports = function(grunt) {
       }
     },
     connect: {
-      app: {
+      livereload: {
         options: {
           port: 3000,
           middleware: lrAppServer
         }
-      },
-      test: {
-        options: {
-          port: 3001,
-          base: './'
-        }
       }
     },
     open: {
-      test: {
-        path: 'http://localhost:<%=connect.test.options.port%>/test'
-      },
-      app: {
-        path: 'http://localhost:<%=connect.app.options.port%>'
+      livereload: {
+        path: 'http://localhost:<%=connect.livereload.options.port%>'
       }
     },
     watch: {
+      app: {
+        files: ['lib/client/{,*/}*', 'lib/server/{,*/}*'],
+        tasks: ['clear', 'dev-build', 'karma:unit:run']
+      },
+      config: {
+        files: ['Gruntfile.js', '*.json', '.*', '.grunt/{,*/}*'],
+        tasks: 'kill'
+      },
       grunt: {
         files: 'Gruntfile.js',
-        tasks: 'jshint:grunt',
+        tasks: ['clear', 'jshint:grunt'],
         options: {
           nocase: true
         }
-      },
-      app: {
-        files: ['bower.json', 'lib/client/{,*/}*',  'lib/server/{,*/}*'],
-        tasks: 'build'
-      },
-      test: {
-        files: ['test/index.html', 'test/specs/{,*/}*'],
-        tasks: ['jshint:test', 'test']
       },
       www: {
         files: 'www/**',
@@ -267,7 +260,8 @@ module.exports = function(grunt) {
 
   // Test task
 
-  grunt.registerTask('test', 'jasmine')
+  grunt.registerTask('test', 'karma:continuous')
+  grunt.registerTask('unit', 'karma:unit')
 
   // Min task
 
@@ -275,44 +269,27 @@ module.exports = function(grunt) {
 
   // Build tasks
 
-  grunt.registerTask('build', function (target) {
-    if (target === 'prod') {
-      grunt.task.run(['lint', 'less', 'copy', 'requirejs:prod', 'min', 'test'])
-    }
-    else {
-      grunt.task.run(['lint', 'less', 'copy', 'requirejs:dev', 'test'])
-    }
-  })
-  grunt.registerTask('package', 'build:prod')
+  grunt.registerTask('build', ['lint', 'less', 'copy', 'requirejs:prod', 'min'])
+  grunt.registerTask('dev-build', ['lint', 'less', 'copy', 'requirejs:dev'])
+  grunt.registerTask('package', ['build', 'test'])
 
   // Server task
 
-  grunt.registerTask('server', function (target) {
-    grunt.task.run('livereload-start')
-    if (!target || target === 'app') {
-      grunt.task.run('connect:app')
-    }
-    if (!target || target === 'test') {
-      grunt.task.run('connect:test')
-    }
-  })
+  grunt.registerTask('server', ['livereload-start', 'connect:livereload'])
 
   // Workflow tasks
 
-  grunt.registerTask('run', function (target) {
-    var build = 'build:' + (target === 'prod' ? target : 'dev')
+  grunt.registerTask('dev', ['clean', 'dev-build', 'unit', 'server', 'open', 'watch'])
 
-    // redefine watch.app.tasks
-    grunt.config.set('watch.app.tasks', build)
+  // Kill task
 
-    grunt.task.run(['clean', build, 'server', 'open', 'watch'])
+  grunt.registerTask('kill', function () {
+    grunt.fail.fatal('The configuration file has changed; you will need to restart grunt and/or reinstall dependencies.')
   })
-  grunt.registerTask('dev', 'run:dev')
-  grunt.registerTask('stage', 'run:prod')
 
   // Default task
 
-  grunt.registerTask('default', 'build')
+  grunt.registerTask('default', ['build', 'test'])
 
   // Task aliases
 
@@ -321,8 +298,6 @@ module.exports = function(grunt) {
   grunt.registerTask('t', 'test')
   grunt.registerTask('b', 'build')
   grunt.registerTask('p', 'package')
-  grunt.registerTask('r', 'run')
   grunt.registerTask('d', 'dev')
-  grunt.registerTask('s', 'stage')
 
 }
