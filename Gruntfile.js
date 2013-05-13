@@ -16,17 +16,8 @@ var _         = require('underscore')
   , inflect   = require('i')()
   , path      = require('path')
   , matchdep  = require('matchdep')
-  , lrSnippet = require('grunt-contrib-livereload/lib/utils').livereloadSnippet
 
 // private
-
-function mountFolder (connect, dir) {
-  return connect.static(path.resolve(dir))
-}
-
-function lrAppServer (connect) {
-  return [lrSnippet, mountFolder(connect, 'www')]
-}
 
 function configureRequirejs (config, baseDir) {
   var mainFiles = grunt.file.expand(path.normalize(baseDir + '/*/main.js'))
@@ -74,14 +65,14 @@ module.exports = function(grunt) {
       www: 'www/*'
     },
     jshint: {
-      options: {
-        jshintrc: '.jshintrc'
+      app: {
+        src: ['lib/client/{,*/}*.js', 'lib/server/{,*/}*.js']
       },
       grunt: {
         src: 'Gruntfile.js'
       },
-      app: {
-        src: ['lib/client/{,*/}*.js', 'lib/server/{,*/}*.js']
+      options: {
+        jshintrc: '.jshintrc'
       }
     },
     less: {
@@ -98,34 +89,6 @@ module.exports = function(grunt) {
       }
     },
     requirejs: {
-      options: {
-        baseUrl: 'lib/client/',
-        cjsTranslate: true,
-        deps: [
-          'almond',
-          'es5',
-          'modernizr'
-        ],
-        mainConfigFile: 'lib/client/config.js',
-        name: 'almond',
-        out: 'www/main.js',
-        paths: {
-          almond: '../../bower_components/almond/almond',
-          es5: '../../bower_components/es5-shim/es5-shim',
-          modernizr: '../../bower_components/modernizr/modernizr',
-          text: '../../bower_components/text/text'
-        },
-        preserveLicenseComments: false,
-        useStrict: true,
-        wrap: {
-          startFile: '.grunt/requirejs/header.txt',
-          endFile: '.grunt/requirejs/footer.txt'
-        },
-        onBuildRead: function (moduleName, pathname, contents) {
-          pathname = inflect.camelize(path.basename(path.dirname(pathname)), false)
-          return contents.replace(/__dirname/g, pathname)
-        }
-      },
       dev: {
         options: {
           optimize: 'none',
@@ -136,6 +99,30 @@ module.exports = function(grunt) {
         options: {
           optimize: 'uglify2',
           generateSourceMaps: true
+        }
+      },
+      options: {
+        baseUrl: 'lib/client/',
+        cjsTranslate: true,
+        deps: [
+          'almond',
+          'es5',
+          'modernizr'
+        ],
+        mainConfigFile: 'config/requirejs/config.js',
+        name: 'almond',
+        out: 'www/main.js',
+        paths: {
+          almond: '../../bower_components/almond/almond',
+          es5: '../../bower_components/es5-shim/es5-shim',
+          modernizr: '../../bower_components/modernizr/modernizr',
+          text: '../../bower_components/text/text'
+        },
+        preserveLicenseComments: false,
+        useStrict: true,
+        onBuildRead: function (moduleName, pathname, contents) {
+          pathname = inflect.camelize(path.basename(path.dirname(pathname)), false)
+          return contents.replace(/__dirname/g, pathname)
         }
       }
     },
@@ -158,9 +145,6 @@ module.exports = function(grunt) {
       }
     },
     karma: {
-      options: {
-        configFile: '.grunt/karma/conf.js'
-      },
       // continuous integration mode for the build: run tests once in PhantomJS browser.
       continuous: {
         singleRun: true
@@ -168,6 +152,9 @@ module.exports = function(grunt) {
       // start karma server (the watch task will run the tests when files change)
       unit: {
         background: true
+      },
+      options: {
+        configFile: 'config/karma/config.js'
       }
     },
     cssmin: {
@@ -179,6 +166,12 @@ module.exports = function(grunt) {
     },
     htmlmin: {
       www: {
+        files: [{
+          expand: true,
+          cwd: 'www/',
+          src: '*.html',
+          dest: 'www/'
+        }],
         options: {
           removeCommentsFromCDATA: true,
           collapseWhitespace: true,
@@ -188,13 +181,7 @@ module.exports = function(grunt) {
           useShortDoctype: true,
           removeEmptyAttributes: true,
           removeOptionalTags: true
-        },
-        files: [{
-          expand: true,
-          cwd: 'www/',
-          src: '*.html',
-          dest: 'www/'
-        }]
+        }
       }
     },
     imagemin: {
@@ -206,27 +193,22 @@ module.exports = function(grunt) {
         }]
       }
     },
-    connect: {
-      livereload: {
-        options: {
-          port: 3000,
-          middleware: lrAppServer
-        }
-      }
-    },
     open: {
       livereload: {
-        path: 'http://localhost:<%=connect.livereload.options.port%>'
+        path: 'http://localhost:3000'
       }
     },
     watch: {
       app: {
         files: ['lib/client/{,*/}*', 'lib/server/{,*/}*'],
-        tasks: ['clear', 'dev-build', 'karma:unit:run']
+        tasks: ['clear', 'dev-build', 'karma:unit:run'],
+        options: {
+          livereload: true
+        }
       },
       config: {
-        files: ['Gruntfile.js', '*.json', '.*', '.grunt/{,*/}*'],
-        tasks: 'kill'
+        files: ['*.json', '.*', 'config/{,*/}*'],
+        tasks: 'warn'
       },
       grunt: {
         files: 'Gruntfile.js',
@@ -234,10 +216,6 @@ module.exports = function(grunt) {
         options: {
           nocase: true
         }
-      },
-      www: {
-        files: 'www/**',
-        tasks: 'livereload'
       }
     }
   }
@@ -249,10 +227,6 @@ module.exports = function(grunt) {
   // initialise grunt
 
   grunt.initConfig(config)
-
-  // ~ hack for livereload - see https://github.com/gruntjs/grunt-contrib-watch/issues/59
-
-  grunt.renameTask('regarde', 'watch');
 
   // Lint task
 
@@ -283,8 +257,8 @@ module.exports = function(grunt) {
 
   // Kill task
 
-  grunt.registerTask('kill', function () {
-    grunt.fail.fatal('The configuration file has changed; you will need to restart grunt and/or reinstall dependencies.')
+  grunt.registerTask('warn', function () {
+    grunt.fail.warning('The configuration file has changed; you will need to restart grunt and/or reinstall dependencies.')
   })
 
   // Default task
