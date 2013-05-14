@@ -16,17 +16,8 @@ var _         = require('underscore')
   , inflect   = require('i')()
   , path      = require('path')
   , matchdep  = require('matchdep')
-  , lrSnippet = require('grunt-contrib-livereload/lib/utils').livereloadSnippet
 
 // private
-
-function mountFolder (connect, dir) {
-  return connect.static(path.resolve(dir))
-}
-
-function lrAppServer (connect) {
-  return [lrSnippet, mountFolder(connect, 'www')]
-}
 
 function configureRequirejs (config, baseDir) {
   var mainFiles = grunt.file.expand(path.normalize(baseDir + '/*/main.js'))
@@ -74,61 +65,27 @@ module.exports = function(grunt) {
       www: 'www/*'
     },
     jshint: {
+      app: {
+        src: ['Gruntfile.js', 'client/{,*/}*.js', 'server/{,*/}*.js']
+      },
       options: {
         jshintrc: '.jshintrc'
-      },
-      grunt: {
-        src: 'Gruntfile.js'
-      },
-      app: {
-        src: ['lib/client/{,*/}*.js', 'lib/server/{,*/}*.js']
-      },
-      test: {
-        src: 'test/specs/{,*/}*.js'
       }
     },
     less: {
       options: {
-        paths: ['lib/client', 'bower_components/bootstrap/less']
+        paths: ['client', 'bower_components/bootstrap/less']
       },
       dev: {
         files: [
           {
-            src: ['lib/client/*/style.less', 'lib/client/*/style.responsive.less'],
+            src: ['client/*/style.less', 'client/*/style.responsive.less'],
             dest: 'www/style.css'
           }
         ]
       }
     },
     requirejs: {
-      options: {
-        baseUrl: 'lib/client/',
-        cjsTranslate: true,
-        deps: [
-          'almond',
-          'es5',
-          'modernizr'
-        ],
-        mainConfigFile: 'lib/client/config.js',
-        name: 'almond',
-        out: 'www/main.js',
-        paths: {
-          almond: '../../bower_components/almond/almond',
-          es5: '../../bower_components/es5-shim/es5-shim',
-          modernizr: '../../bower_components/modernizr/modernizr',
-          text: '../../bower_components/text/text'
-        },
-        preserveLicenseComments: false,
-        useStrict: true,
-        wrap: {
-          startFile: '.grunt/requirejs/header.txt',
-          endFile: '.grunt/requirejs/footer.txt'
-        },
-        onBuildRead: function (moduleName, pathname, contents) {
-          pathname = inflect.camelize(path.basename(path.dirname(pathname)), false)
-          return contents.replace(/__dirname/g, pathname)
-        }
-      },
       dev: {
         options: {
           optimize: 'none',
@@ -140,6 +97,41 @@ module.exports = function(grunt) {
           optimize: 'uglify2',
           generateSourceMaps: true
         }
+      },
+      options: {
+        baseUrl: 'client/',
+        cjsTranslate: true,
+        deps: [
+          'almond',
+          'es5',
+          'modernizr',
+          'jquery',
+          'json3'
+        ],
+        mainConfigFile: 'config/requirejs/config.js',
+        name: 'almond',
+        out: 'www/main.js',
+        paths: {
+          almond: '../bower_components/almond/almond',
+          angular: '../bower_components/angular/angular',
+          es5: '../bower_components/es5-shim/es5-shim',
+          jquery: '../bower_components/jquery/jquery',
+          json3: '../bower_components/json3/lib/json3',
+          modernizr: '../bower_components/modernizr/modernizr',
+          text: '../bower_components/text/text',
+          underscore: '../bower_components/underscore/underscore'
+        },
+        preserveLicenseComments: false,
+        useStrict: true,
+        onBuildRead: function (moduleName, pathname, contents) {
+          pathname = inflect.camelize(path.basename(path.dirname(pathname)), false)
+          return contents.replace(/__dirname/g, pathname)
+        },
+        shim: {
+          angular: {
+            exports: 'angular'
+          }
+        }
       }
     },
     copy: {
@@ -148,7 +140,7 @@ module.exports = function(grunt) {
           {
             expand: true,
             flatten: true,
-            src: 'lib/client/*.html',
+            src: 'client/*.html',
             dest: 'www/'
           },
           {
@@ -160,12 +152,15 @@ module.exports = function(grunt) {
         ]
       }
     },
-    jasmine: {
-      all: {
-        options: {
-          outfile: 'test/_index.html',
-          template: 'test/index.html'
-        }
+    karma: {
+      continuous: {
+        singleRun: true
+      },
+      unit: {
+        background: true
+      },
+      options: {
+        configFile: 'config/karma/config.js'
       }
     },
     cssmin: {
@@ -177,6 +172,12 @@ module.exports = function(grunt) {
     },
     htmlmin: {
       www: {
+        files: [{
+          expand: true,
+          cwd: 'www/',
+          src: '*.html',
+          dest: 'www/'
+        }],
         options: {
           removeCommentsFromCDATA: true,
           collapseWhitespace: true,
@@ -186,17 +187,11 @@ module.exports = function(grunt) {
           useShortDoctype: true,
           removeEmptyAttributes: true,
           removeOptionalTags: true
-        },
-        files: [{
-          expand: true,
-          cwd: 'www/',
-          src: '*.html',
-          dest: 'www/'
-        }]
+        }
       }
     },
     imagemin: {
-      dist: {
+      www: {
         files: [{
           expand: true,
           src: 'www/{,*/}*.{png,jpg,jpeg}',
@@ -204,62 +199,33 @@ module.exports = function(grunt) {
         }]
       }
     },
-    connect: {
-      app: {
-        options: {
-          port: 3000,
-          middleware: lrAppServer
-        }
-      },
-      test: {
-        options: {
-          port: 3001,
-          base: './'
-        }
-      }
-    },
     open: {
-      test: {
-        path: 'http://localhost:<%=connect.test.options.port%>/test'
-      },
-      app: {
-        path: 'http://localhost:<%=connect.app.options.port%>'
+      livereload: {
+        path: 'http://localhost:3000'
       }
     },
     watch: {
-      grunt: {
-        files: 'Gruntfile.js',
-        tasks: 'jshint:grunt',
+      app: {
+        files: ['Gruntfile.js', 'client/{,*/}*', 'server/{,*/}*'],
+        tasks: ['clear', 'dev-build', 'karma:unit:run'],
         options: {
-          nocase: true
+          livereload: true
         }
       },
-      app: {
-        files: ['bower.json', 'lib/client/{,*/}*',  'lib/server/{,*/}*'],
-        tasks: 'build'
-      },
-      test: {
-        files: ['test/index.html', 'test/specs/{,*/}*'],
-        tasks: ['jshint:test', 'test']
-      },
-      www: {
-        files: 'www/**',
-        tasks: 'livereload'
+      config: {
+        files: ['*.json', '.*', 'config/{,*/}*'],
+        tasks: 'warn'
       }
     }
   }
 
   // discover client AMD packages for requirejs
 
-  configureRequirejs(config.requirejs.options, 'lib/client')
+  configureRequirejs(config.requirejs.options, 'client')
 
   // initialise grunt
 
   grunt.initConfig(config)
-
-  // ~ hack for livereload - see https://github.com/gruntjs/grunt-contrib-watch/issues/59
-
-  grunt.renameTask('regarde', 'watch');
 
   // Lint task
 
@@ -267,7 +233,8 @@ module.exports = function(grunt) {
 
   // Test task
 
-  grunt.registerTask('test', 'jasmine')
+  grunt.registerTask('test', 'karma:continuous')
+  grunt.registerTask('unit', 'karma:unit')
 
   // Min task
 
@@ -275,44 +242,29 @@ module.exports = function(grunt) {
 
   // Build tasks
 
-  grunt.registerTask('build', function (target) {
-    if (target === 'prod') {
-      grunt.task.run(['lint', 'less', 'copy', 'requirejs:prod', 'min', 'test'])
-    }
-    else {
-      grunt.task.run(['lint', 'less', 'copy', 'requirejs:dev', 'test'])
-    }
-  })
-  grunt.registerTask('package', 'build:prod')
+  grunt.registerTask('build', ['lint', 'less', 'copy', 'requirejs:prod', 'min'])
+  grunt.registerTask('dev-build', ['lint', 'less', 'copy', 'requirejs:dev'])
+  grunt.registerTask('package', ['build', 'test'])
 
   // Server task
 
-  grunt.registerTask('server', function (target) {
-    grunt.task.run('livereload-start')
-    if (!target || target === 'app') {
-      grunt.task.run('connect:app')
-    }
-    if (!target || target === 'test') {
-      grunt.task.run('connect:test')
-    }
+  grunt.registerTask('server', function () {
+    require('./server')
   })
 
   // Workflow tasks
 
-  grunt.registerTask('run', function (target) {
-    var build = 'build:' + (target === 'prod' ? target : 'dev')
+  grunt.registerTask('dev', ['clean', 'dev-build', 'unit', 'server', 'open', 'watch'])
 
-    // redefine watch.app.tasks
-    grunt.config.set('watch.app.tasks', build)
+  // Warn task
 
-    grunt.task.run(['clean', build, 'server', 'open', 'watch'])
+  grunt.registerTask('warn', function () {
+    grunt.fail.warning('The configuration file has changed; you will need to restart grunt and/or reinstall dependencies.')
   })
-  grunt.registerTask('dev', 'run:dev')
-  grunt.registerTask('stage', 'run:prod')
 
   // Default task
 
-  grunt.registerTask('default', 'build')
+  grunt.registerTask('default', ['build', 'test'])
 
   // Task aliases
 
@@ -320,9 +272,8 @@ module.exports = function(grunt) {
   grunt.registerTask('l', 'lint')
   grunt.registerTask('t', 'test')
   grunt.registerTask('b', 'build')
+  grunt.registerTask('db', 'dev-build')
   grunt.registerTask('p', 'package')
-  grunt.registerTask('r', 'run')
   grunt.registerTask('d', 'dev')
-  grunt.registerTask('s', 'stage')
 
 }

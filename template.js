@@ -1,7 +1,7 @@
 
 /*
- * grunt-init-amd
- * https://github.com/kaheglar/grunt-init-amd
+ * grunt-init-angular
+ * https://github.com/kaheglar/grunt-init-angular
  *
  * Copyright (c) 2013 kaheglar.
  * Licensed under the MIT license.
