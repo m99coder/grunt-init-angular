@@ -66,10 +66,7 @@ module.exports = function(grunt) {
     },
     jshint: {
       app: {
-        src: ['lib/client/{,*/}*.js', 'lib/server/{,*/}*.js']
-      },
-      grunt: {
-        src: 'Gruntfile.js'
+        src: ['Gruntfile.js', 'client/{,*/}*.js', 'server/{,*/}*.js']
       },
       options: {
         jshintrc: '.jshintrc'
@@ -77,12 +74,12 @@ module.exports = function(grunt) {
     },
     less: {
       options: {
-        paths: ['lib/client', 'bower_components/bootstrap/less']
+        paths: ['client', 'bower_components/bootstrap/less']
       },
       dev: {
         files: [
           {
-            src: ['lib/client/*/style.less', 'lib/client/*/style.responsive.less'],
+            src: ['client/*/style.less', 'client/*/style.responsive.less'],
             dest: 'www/style.css'
           }
         ]
@@ -102,27 +99,37 @@ module.exports = function(grunt) {
         }
       },
       options: {
-        baseUrl: 'lib/client/',
+        baseUrl: 'client/',
         cjsTranslate: true,
         deps: [
           'almond',
           'es5',
-          'modernizr'
+          'modernizr',
+          'jquery',
+          'json3'
         ],
         mainConfigFile: 'config/requirejs/config.js',
         name: 'almond',
         out: 'www/main.js',
         paths: {
-          almond: '../../bower_components/almond/almond',
-          es5: '../../bower_components/es5-shim/es5-shim',
-          modernizr: '../../bower_components/modernizr/modernizr',
-          text: '../../bower_components/text/text'
+          almond: '../bower_components/almond/almond',
+          angular: '../bower_components/angular/angular',
+          es5: '../bower_components/es5-shim/es5-shim',
+          jquery: '../bower_components/jquery/jquery',
+          json3: '../bower_components/json3/lib/json3',
+          modernizr: '../bower_components/modernizr/modernizr',
+          text: '../bower_components/text/text'
         },
         preserveLicenseComments: false,
         useStrict: true,
         onBuildRead: function (moduleName, pathname, contents) {
           pathname = inflect.camelize(path.basename(path.dirname(pathname)), false)
           return contents.replace(/__dirname/g, pathname)
+        },
+        shim: {
+          angular: {
+            exports: 'angular'
+          }
         }
       }
     },
@@ -132,7 +139,7 @@ module.exports = function(grunt) {
           {
             expand: true,
             flatten: true,
-            src: 'lib/client/*.html',
+            src: 'client/*.html',
             dest: 'www/'
           },
           {
@@ -145,11 +152,9 @@ module.exports = function(grunt) {
       }
     },
     karma: {
-      // continuous integration mode for the build: run tests once in PhantomJS browser.
       continuous: {
         singleRun: true
       },
-      // start karma server (the watch task will run the tests when files change)
       unit: {
         background: true
       },
@@ -200,7 +205,7 @@ module.exports = function(grunt) {
     },
     watch: {
       app: {
-        files: ['lib/client/{,*/}*', 'lib/server/{,*/}*'],
+        files: ['Gruntfile.js', 'client/{,*/}*', 'server/{,*/}*'],
         tasks: ['clear', 'dev-build', 'karma:unit:run'],
         options: {
           livereload: true
@@ -209,20 +214,13 @@ module.exports = function(grunt) {
       config: {
         files: ['*.json', '.*', 'config/{,*/}*'],
         tasks: 'warn'
-      },
-      grunt: {
-        files: 'Gruntfile.js',
-        tasks: ['clear', 'jshint:grunt'],
-        options: {
-          nocase: true
-        }
       }
     }
   }
 
   // discover client AMD packages for requirejs
 
-  configureRequirejs(config.requirejs.options, 'lib/client')
+  configureRequirejs(config.requirejs.options, 'client')
 
   // initialise grunt
 
@@ -249,13 +247,15 @@ module.exports = function(grunt) {
 
   // Server task
 
-  grunt.registerTask('server', ['livereload-start', 'connect:livereload'])
+  grunt.registerTask('server', function () {
+    require('./server')
+  })
 
   // Workflow tasks
 
   grunt.registerTask('dev', ['clean', 'dev-build', 'unit', 'server', 'open', 'watch'])
 
-  // Kill task
+  // Warn task
 
   grunt.registerTask('warn', function () {
     grunt.fail.warning('The configuration file has changed; you will need to restart grunt and/or reinstall dependencies.')
@@ -271,6 +271,7 @@ module.exports = function(grunt) {
   grunt.registerTask('l', 'lint')
   grunt.registerTask('t', 'test')
   grunt.registerTask('b', 'build')
+  grunt.registerTask('db', 'dev-build')
   grunt.registerTask('p', 'package')
   grunt.registerTask('d', 'dev')
 

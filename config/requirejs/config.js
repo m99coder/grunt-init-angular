@@ -9,13 +9,6 @@
 
 require.config({
   paths: {
-    angular: '../../bower_components/angular/angular',
-    jquery: '../../bower_components/jquery/jquery',
-    underscore: '../../bower_components/underscore/underscore'
-  },
-  shim: {
-    angular: {
-      exports: 'angular'
-    }
+    underscore: '../bower_components/underscore/underscore'
   }
 })

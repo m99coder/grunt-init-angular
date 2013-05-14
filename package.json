@@ -24,10 +24,10 @@
   "engines": {
     "node": "~0.10.0"
   },
-  "main": "lib/server",
+  "main": "server",
   "bin": "bin/grunt-init-angular",
   "scripts": {
-    "start": "node lib/server",
+    "start": "node server",
     "test": "grunt"
   },
   "dependencies": {
@@ -44,7 +44,6 @@
     "grunt-contrib-jshint": "~0.4.0",
     "grunt-contrib-less": "~0.5.0",
     "grunt-contrib-requirejs": "~0.4.0",
-    "grunt-contrib-uglify": "~0.2.0",
     "grunt-contrib-watch": "~0.4.0",
     "grunt-karma": "~0.4.4",
     "grunt-open": "~0.2.0",

@@ -13,9 +13,11 @@ basePath = '../../'
 files = [
   JASMINE,
   JASMINE_ADAPTER,
-  'www/main.js',
-  'bower_components/angular-mocks/angular-mocks.js',
-  'lib/client/{,*/}*.spec.js'
+  REQUIRE,
+  REQUIRE_ADAPTER,
+  { pattern: 'bower_components/**/*.js', included: false },
+  { pattern: 'client/*/*', included: false },
+  'client/main-test.js'
 ]
 
 // list of files to exclude
