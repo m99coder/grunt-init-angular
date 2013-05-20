@@ -3,9 +3,9 @@
 
 define([
   'angularMocks',
-  './directive'
+  './config'
 ], function(mock, module) {
-  describe('Module "application/directive"', function () {
+  describe('Module "todos/config"', function () {
     beforeEach(mock.module(module.name))
 
     it('should be defined.', function () {
@@ -16,11 +16,5 @@ define([
       expect(typeof module.name).toEqual('string')
       expect(module.name).toBeTruthy()
     })
-
-    it('should render template corectly.', mock.inject(function ($compile, $rootScope) {
-      var element = $compile('<application id="{{id}}"/>')($rootScope)
-      $rootScope.$apply()
-      expect(element.attr('id')).toContain('application')
-    }))
   })
 })

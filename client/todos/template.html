@@ -1,0 +1,19 @@
+<form ng-submit="addTodo()">
+  <input type="text" ng-model="newTodo" autofocus>
+  <ul class="unstyled">
+    <li class="clearfix" ng-repeat="todo in todos | filter:location.search()">
+      <input type="checkbox" ng-model="todo.status" ng-true-value="complete" ng-false-value="active">
+      <span contenteditable ng-model="todo.description"></span>
+      <button type="button" class="btn btn-mini btn-danger pull-right" tabindex="-1" placeholder="What needs doin'?" ng-click="removeTodo(todo)">
+        <i class="icon-trash icon-white"></i>
+      </button>
+    </li>
+  </ul>
+  <a href="." title="View all todos">All</a>
+  <a href="?status=active" title="View active todos">Active</a>
+  <a href="?status=complete" title="View completed todos">Complete</a>
+  <a href="/nowhere" title="404">404</a>
+  <a href="/todo" title="to">todo</a>
+  <a href="/todo/1" title="to1">todo/1</a>
+  <a href="/todo/3" title="to3">todo/3</a>
+</form>

@@ -118,7 +118,8 @@ module.exports = function(grunt) {
           jquery: '../bower_components/jquery/jquery',
           json3: '../bower_components/json3/lib/json3',
           modernizr: '../bower_components/modernizr/modernizr',
-          text: '../bower_components/text/text'
+          text: '../bower_components/text/text',
+          underscore: '../bower_components/underscore/underscore'
         },
         preserveLicenseComments: false,
         useStrict: true,
@@ -146,6 +147,12 @@ module.exports = function(grunt) {
             expand: true,
             flatten: true,
             src: 'bower_components/bootstrap/img/*',
+            dest: 'www/img/'
+          },
+          {
+            expand: true,
+            flatten: true,
+            src: 'client/*/img/*',
             dest: 'www/img/'
           }
         ]

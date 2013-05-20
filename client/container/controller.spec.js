@@ -3,9 +3,9 @@
 
 define([
   'angularMocks',
-  './directive'
+  './controller'
 ], function(mock, module) {
-  describe('Module "application/directive"', function () {
+  describe('Module "container/controller"', function () {
     beforeEach(mock.module(module.name))
 
     it('should be defined.', function () {
@@ -17,10 +17,10 @@ define([
       expect(module.name).toBeTruthy()
     })
 
-    it('should render template corectly.', mock.inject(function ($compile, $rootScope) {
-      var element = $compile('<application id="{{id}}"/>')($rootScope)
-      $rootScope.$apply()
-      expect(element.attr('id')).toContain('application')
+    it('should initialize the scope correctly.', mock.inject(function ($rootScope, $controller) {
+      var scope = $rootScope.$new()
+      $controller(module.name + 'Ctrl', { $scope: scope })
+      expect(scope.name).toEqual(module.name)
     }))
   })
 })

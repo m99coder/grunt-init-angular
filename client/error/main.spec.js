@@ -2,15 +2,16 @@
 'use strict';
 
 define([
-  './module'
+  './main'
 ], function(module) {
-  describe('Module "application/module"', function () {
+  describe('Module "error/main"', function () {
     it('should be defined.', function () {
       expect(module).toBeDefined()
     })
 
     it('should have a name.', function () {
-      expect(module.name).toEqual('application')
+      expect(typeof module.name).toEqual('string')
+      expect(module.name).toBeTruthy()
     })
   })
 })

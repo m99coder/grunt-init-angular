@@ -28045,7 +28045,27 @@ define("angular", (function (global) {
 define('application/module',[
   'angular'
 ], function (angular) {
-  return angular.module('application', [])
+  return angular.module('application', [ 'error', 'container', 'todos' ])
+})
+;
+
+'use strict';
+
+define('application/config',[
+  './module'
+], function (module) {
+  return module.
+    config([
+      '$locationProvider',
+      '$routeProvider',
+      function ($locationProvider, $routeProvider) {
+        // Enable the History API
+        $locationProvider.html5Mode(true)
+
+        // Configure routes
+        $routeProvider.when('/', {})
+      }
+    ])
 })
 ;
 
@@ -28057,12 +28077,21 @@ define('application/controller',[
   return module.
     controller(module.name + 'Ctrl', [
       '$scope',
-      function ($scope) {
+      '$location',
+      '$route',
+      function ($scope, $location, $route) {
+        // Cache reference to location
+        $scope.location = $location
+        // Cache reference to route
+        $scope.route = $route
+
+        // Set component properties
         $scope.name = module.name
         $scope.id = module.name
       }
     ])
-});
+})
+;
 /**
  * @license RequireJS text 2.0.6 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
@@ -28431,7 +28460,7 @@ define('text',['module'], function (module) {
     return text;
 });
 
-define('text!application/template.html',[],function () { return '<div>\n  <heading id="{{id}}"></heading>\n  <content id="{{id}}"></content>\n  <error id="{{id}}"></error>\n</div>';});
+define('text!application/template.html',[],function () { return '<div>  \n  <container id="{{id}}"/>\n  <error id="{{id}}"/>\n</div>';});
 
 
 'use strict';
@@ -28455,14 +28484,332 @@ define('application/directive',[
 'use strict';
 
 define('application/main',[
+  './config',
   './controller',
   './directive',
   './module'
-], function (controller, directive, module) {
+], function (config, controller, directive, module) {
   return module
 })
 ;
 define('application', ['application/main'], function (main) { return main; });
+
+
+'use strict';
+
+define('container/module',[
+  'angular'
+], function (angular) {
+  return angular.module('container', [])
+})
+;
+
+'use strict';
+
+define('container/config',[
+  './module'
+], function (module) {
+  return module.
+    config([function () {}])
+})
+;
+
+'use strict';
+
+define('container/controller',[
+  './module'
+], function (module) {
+  return module.
+    controller(module.name + 'Ctrl', [
+      '$scope',
+      function ($scope) {
+        // Set component properties
+        $scope.name = module.name
+        $scope.id = module.name
+      }
+    ])
+})
+;
+define('text!container/template.html',[],function () { return '<div class="container-fluid" ng-hide="error.status">\n  <div class="row-fluid">\n    <div class="span4"></div>\n      <div class="span4">\n        <header>\n          <h1>Todos</h1>\n        </header>\n        <todos id="{{id}}"/>\n      </div>\n    <div class="span4"></div>\n  </div>\n</div>';});
+
+
+'use strict';
+
+define('container/directive',[
+  './module',
+  'text!./template.html'
+], function (module, template) {
+  return module.
+    directive(module.name, function () {
+      return {
+        controller: module.name + 'Ctrl',
+        restrict: 'E,A',
+        scope: true,
+        template: template
+      }
+    })
+})
+;
+
+'use strict';
+
+define('container/main',[
+  './config',
+  './controller',
+  './directive',
+  './module'
+], function (config, controller, directive, module) {
+  return module
+})
+;
+define('container', ['container/main'], function (main) { return main; });
+
+
+'use strict';
+
+define('error/module',[
+  'angular'
+], function (angular) {
+  return angular.module('error', [])
+})
+;
+
+'use strict';
+
+define('error/config',[
+  './module'
+], function (module) {
+  return module.
+    config([
+      '$routeProvider',
+      function ($routeProvider) {
+        // Configure routes
+        $routeProvider.otherwise({
+          resolve: {
+            status: [
+              '$q',
+              function($q) {
+                var error = $q.defer()
+                error.reject({
+                  status: 404,
+                  message: 'Page not found!'
+                })
+                return error.promise
+              }
+            ]
+          }
+        })
+      }
+    ])
+})
+;
+
+'use strict';
+
+define('error/controller',[
+  './module'
+], function (module) {
+  return module.
+    controller(module.name + 'Ctrl', [
+      '$scope',
+      '$rootScope',
+      function ($scope, $rootScope) {
+        // Init $rootScope
+        $rootScope.error = {}
+
+        // Set component properties
+        $scope.name = module.name
+        $scope.id = module.name
+
+        // Set error status on error
+        $scope.$on('$routeChangeError', function (event, current, previous, rejection) {
+          $scope.status = rejection.status
+          $scope.message = rejection.message
+          $rootScope.error = $rootScope.error || {}
+          $rootScope.error.status = rejection.status
+          $rootScope.error.message = rejection.message
+        })
+
+        // Clear error status on success
+        $scope.$on('$routeChangeSuccess', function () {
+          $scope.status = null
+          $scope.message = null
+          $rootScope.error.status = null
+          $rootScope.error.message = null
+        })
+      }
+    ])
+})
+;
+define('text!error/template.html',[],function () { return '<div class="container-fluid" ng-show="status">\n  <div class="row-fluid">\n    <div class="span4"></div>\n    <div class="span4">\n      <header>\n        <h1>{{status}}</h1>\n        <h3 class="muted">{{message}}</h2>\n      </header>\n    </div>\n    <div class="span4"></div>\n  </div>\n</div>';});
+
+
+'use strict';
+
+define('error/directive',[
+  './module',
+  'text!./template.html'
+], function (module, template) {
+  return module.
+    directive(module.name, function () {
+      return {
+        controller: module.name + 'Ctrl',
+        restrict: 'E,A',
+        scope: true,
+        template: template
+      }
+    })
+})
+;
+
+'use strict';
+
+define('error/main',[
+  './config',
+  './controller',
+  './directive',
+  './module'
+], function (config, controller, directive, module) {
+  return module
+})
+;
+define('error', ['error/main'], function (main) { return main; });
+
+
+'use strict';
+
+define('todos/module',[
+  'angular'
+], function (angular) {
+  return angular.module('todos', [])
+})
+;
+
+'use strict';
+
+define('todos/config',[
+  './module'
+], function (module) {
+  return module.
+    config([
+      '$routeProvider',
+      function ($routeProvider) {
+        // Configure routes
+        $routeProvider.
+          when('/todo', {}).
+          when('/todo/:todoId', {})
+      }
+    ])
+})
+;
+
+'use strict';
+
+define('todos/controller',[
+  './module'
+], function (module) {
+  return module.
+    controller(module.name + 'Ctrl', [
+      '$scope',
+      '$routeParams',
+      function ($scope, $routeParams) {
+        // Cache services
+        $scope.$routeParams = $routeParams
+
+        // set name & id
+        $scope.name = module.name
+        $scope.id = module.name
+
+        // description for new todo
+        $scope.newTodo = ''
+
+        // list of todos
+        $scope.todos = [
+          {
+            description: 'steve',
+            status: 'active'
+          },
+          {
+            description: 'bill',
+            status: 'active'
+          }
+        ]
+
+        // Create a todo
+        $scope.addTodo = function () {
+          if ($scope.newTodo) {
+            $scope.todos.push({
+              description: $scope.newTodo,
+              status: 'active'
+            })
+            $scope.newTodo = ''
+          }
+        }
+
+        // Delete a todo
+        $scope.removeTodo = function (todo) {
+          $scope.todos.splice($scope.todos.indexOf(todo), 1)
+        }
+
+        // Watch for context changes - todoId
+        $scope.$watch('$routeParams.todoId', function (value) {
+          console.log(value)
+        })
+      }
+    ])
+})
+;
+define('text!todos/template.html',[],function () { return '<form ng-submit="addTodo()">\n  <input type="text" ng-model="newTodo" autofocus>\n  <ul class="unstyled">\n    <li class="clearfix" ng-repeat="todo in todos | filter:location.search()">\n      <input type="checkbox" ng-model="todo.status" ng-true-value="complete" ng-false-value="active">\n      <span contenteditable ng-model="todo.description"></span>\n      <button type="button" class="btn btn-mini btn-danger pull-right" tabindex="-1" placeholder="What needs doin\'?" ng-click="removeTodo(todo)">\n        <i class="icon-trash icon-white"></i>\n      </button>\n    </li>\n  </ul>\n  <a href="." title="View all todos">All</a>\n  <a href="?status=active" title="View active todos">Active</a>\n  <a href="?status=complete" title="View completed todos">Complete</a>\n  <a href="/nowhere" title="404">404</a>\n  <a href="/todo" title="to">todo</a>\n  <a href="/todo/1" title="to1">todo/1</a>\n  <a href="/todo/3" title="to3">todo/3</a>\n</form>';});
+
+
+'use strict';
+
+define('todos/directive',[
+  './module',
+  'text!./template.html'
+], function (module, template) {
+  return module.
+    directive(module.name, function () {
+      return {
+        controller: module.name + 'Ctrl',
+        restrict: 'E,A',
+        scope: true,
+        template: template
+      }
+    }).
+    directive('contenteditable', function() {
+      return {
+        require: 'ngModel',
+        link: function(scope, elm, attrs, ctrl) {
+          // view -> model
+          elm.bind('blur keyup change', function() {
+            scope.$apply(function() {
+              ctrl.$setViewValue(elm.html())
+            })
+          })
+
+          // model -> view
+          ctrl.$render = function() {
+            elm.html(ctrl.$viewValue)
+          }
+        }
+      }
+    })
+})
+;
+
+'use strict';
+
+define('todos/main',[
+  './config',
+  './controller',
+  './directive',
+  './module'
+], function (config, controller, directive, module) {
+  return module
+})
+;
+define('todos', ['todos/main'], function (main) { return main; });
 
 
 'use strict';
@@ -28474,5 +28821,6 @@ define('main',[
   angular.element(document).ready(function () {
     angular.bootstrap(document, [ module.name ])
   })
-});
-require(["application", "./main"]);
+})
+;
+require(["application", "container", "error", "todos", "./main"]);

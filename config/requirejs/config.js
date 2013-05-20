@@ -8,7 +8,5 @@
  */
 
 require.config({
-  paths: {
-    underscore: '../bower_components/underscore/underscore'
-  }
+  paths: {}
 })
