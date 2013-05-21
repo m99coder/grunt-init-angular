@@ -148,6 +148,12 @@ module.exports = function(grunt) {
             flatten: true,
             src: 'bower_components/bootstrap/img/*',
             dest: 'www/img/'
+          },
+          {
+            expand: true,
+            flatten: true,
+            src: 'client/*/img/*',
+            dest: 'www/img/'
           }
         ]
       }

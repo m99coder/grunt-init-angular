@@ -7,6 +7,8 @@
  * Licensed under the {%= licenses.join(', ') %} license{%= licenses.length === 1 ? '' : 's' %}.
  */
 
+'use strict';
+
 basePath = '../../'
 
 // list of files / patterns to load in the browser

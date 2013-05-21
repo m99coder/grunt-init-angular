@@ -4,5 +4,5 @@
 define([
   'angular'
 ], function (angular) {
-  return angular.module('application', [])
+  return angular.module('application', [ 'container', 'error' ])
 })
